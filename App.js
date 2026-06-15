@@ -2,6 +2,8 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts, Anton_400Regular } from '@expo-google-fonts/anton';
+import { View, ActivityIndicator } from 'react-native';
 import HomeScreen from './src/screens/HomeScreen';
 import TrackScreen from './src/screens/TrackScreen';
 import RunDetailScreen from './src/screens/RunDetailScreen';
@@ -22,6 +24,24 @@ const navTheme = {
 };
 
 export default function App() {
+  // Load the Nike-style display font before rendering the UI.
+  const [fontsLoaded] = useFonts({ Anton_400Regular });
+
+  if (!fontsLoaded) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.bg,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ActivityIndicator color={colors.accent} size="large" />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
