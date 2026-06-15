@@ -12,7 +12,7 @@ import MapView, { Polyline, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { pathDistance, formatDistance, formatDuration, formatPace } from '../geo';
 import { saveRun, makeId } from '../storage';
-import { colors } from '../theme';
+import { colors, fonts } from '../theme';
 
 export default function TrackScreen({ navigation }) {
   const [permission, setPermission] = useState('pending'); // pending | granted | denied
@@ -52,6 +52,9 @@ export default function TrackScreen({ navigation }) {
       } catch (e) {
         // Leave region null; map will still render at default.
       }
+      // Auto-start tracking right away — the run begins the moment you arrive
+      // from the Home screen's START button.
+      handleStart();
     })();
 
     return () => stopWatching();
@@ -205,21 +208,12 @@ export default function TrackScreen({ navigation }) {
         </View>
 
         <View style={styles.controls}>
-          {status === 'idle' && (
-            <TouchableOpacity
-              style={[styles.button, styles.start]}
-              onPress={handleStart}
-            >
-              <Text style={styles.startText}>Start</Text>
-            </TouchableOpacity>
-          )}
-
           {status === 'running' && (
             <TouchableOpacity
               style={[styles.button, styles.pause]}
               onPress={handlePause}
             >
-              <Text style={styles.pauseText}>Pause</Text>
+              <Text style={styles.pauseText}>PAUSE</Text>
             </TouchableOpacity>
           )}
 
@@ -229,20 +223,20 @@ export default function TrackScreen({ navigation }) {
                 style={[styles.button, styles.resume, styles.half]}
                 onPress={handleResume}
               >
-                <Text style={styles.startText}>Resume</Text>
+                <Text style={styles.startText}>RESUME</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.finish, styles.half]}
                 onPress={handleFinish}
               >
-                <Text style={styles.finishText}>Finish</Text>
+                <Text style={styles.finishText}>FINISH</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {status === 'running' && (
             <TouchableOpacity onPress={handleFinish} style={styles.finishLink}>
-              <Text style={styles.finishLinkText}>Finish run</Text>
+              <Text style={styles.finishLinkText}>FINISH RUN</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -302,9 +296,16 @@ const styles = StyleSheet.create({
   },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between' },
   stat: { flex: 1, alignItems: 'center' },
-  statValue: { color: colors.text, fontSize: 18, fontWeight: '700' },
-  statValueBig: { fontSize: 24 },
-  statLabel: { color: colors.textDim, fontSize: 12, marginTop: 4 },
+  statValue: { color: colors.text, fontFamily: fonts.display, fontSize: 22 },
+  statValueBig: { fontSize: 34 },
+  statLabel: {
+    color: colors.textDim,
+    fontSize: 11,
+    marginTop: 4,
+    letterSpacing: 1,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
   controls: { marginTop: 20, marginBottom: 8 },
   button: {
     borderRadius: 16,
@@ -315,13 +316,33 @@ const styles = StyleSheet.create({
   resume: { backgroundColor: colors.accent },
   pause: { backgroundColor: colors.border },
   finish: { backgroundColor: colors.danger },
-  startText: { color: colors.onAccent, fontSize: 17, fontWeight: '700' },
-  pauseText: { color: colors.text, fontSize: 17, fontWeight: '700' },
-  finishText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  startText: {
+    color: colors.onAccent,
+    fontFamily: fonts.display,
+    fontSize: 18,
+    letterSpacing: 1,
+  },
+  pauseText: {
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: 18,
+    letterSpacing: 1,
+  },
+  finishText: {
+    color: '#fff',
+    fontFamily: fonts.display,
+    fontSize: 18,
+    letterSpacing: 1,
+  },
   pausedRow: { flexDirection: 'row', gap: 12 },
   half: { flex: 1 },
   finishLink: { alignItems: 'center', paddingVertical: 14 },
-  finishLinkText: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
+  finishLinkText: {
+    color: colors.textDim,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
   secondaryButton: {
     marginTop: 28,
     paddingVertical: 12,
