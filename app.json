@@ -1,13 +1,17 @@
 {
   "expo": {
-    "name": "runs_tracker_app",
+    "name": "Run Tracker",
     "slug": "runs_tracker_app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Run Tracker uses your location to map the path of your runs.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Run Tracker uses your location to map the path of your runs."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -15,10 +19,27 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Run Tracker uses your location to map the path of your runs."
+        }
+      ]
+    ]
   }
 }
