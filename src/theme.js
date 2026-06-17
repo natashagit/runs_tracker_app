@@ -9,7 +9,9 @@ export const colors = {
   text: '#FFFFFF',      // white
   textDim: '#8A8A8A',   // neutral gray
   border: '#262626',    // subtle border
-  track: '#FF2D9B',     // pink route line on the map
+  track: '#FF2D9B',     // pink route line (legacy / fallback)
+  walk: '#00E0C7',      // teal — the WALK segment of a route
+  run: '#FF2D9B',       // pink — the RUN segment of a route
 };
 
 // Display font (loaded in App.js). Use for big bold headlines, like Nike.

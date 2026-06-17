@@ -16,13 +16,37 @@ export default function RunDetailScreen({ route }) {
   const start = run.coords[0];
   const end = run.coords[run.coords.length - 1];
 
+  // Split into walk/run segments by each point's mode (same as TrackScreen).
+  const walkLine = run.coords.filter((p) => p.mode === 'walk');
+  const runPoints = run.coords.filter((p) => p.mode === 'run');
+  const runLine =
+    walkLine.length && runPoints.length
+      ? [walkLine[walkLine.length - 1], ...runPoints]
+      : runPoints;
+  // Older runs saved before phases existed have no mode — draw them as one line.
+  const isLegacy = walkLine.length === 0 && runPoints.length === 0;
+
   return (
     <View style={styles.container}>
       <MapView style={styles.map} initialRegion={region}>
-        {run.coords.length > 1 && (
+        {isLegacy && run.coords.length > 1 && (
           <Polyline
             coordinates={run.coords}
             strokeColor={colors.track}
+            strokeWidth={5}
+          />
+        )}
+        {walkLine.length > 1 && (
+          <Polyline
+            coordinates={walkLine}
+            strokeColor={colors.walk}
+            strokeWidth={5}
+          />
+        )}
+        {runLine.length > 1 && (
+          <Polyline
+            coordinates={runLine}
+            strokeColor={colors.run}
             strokeWidth={5}
           />
         )}
