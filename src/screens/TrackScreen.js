@@ -17,10 +17,13 @@ import {
   formatDistance,
   formatDuration,
 } from '../geo';
-import { saveRun, makeId } from '../storage';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { colors, fonts } from '../theme';
 
 export default function TrackScreen({ navigation }) {
+  const addRun = useMutation(api.runs.add);
+
   const [permission, setPermission] = useState('pending'); // pending | granted | denied
   const [region, setRegion] = useState(null);
   const [coords, setCoords] = useState([]);
@@ -161,15 +164,20 @@ export default function TrackScreen({ navigation }) {
         text: 'Save',
         onPress: async () => {
           stopWatching();
-          await saveRun({
-            id: makeId(),
-            date: new Date().toISOString(),
-            durationSec: elapsed,
-            distanceM: distance, // total: walk + run
-            runDistanceM: runDistance, // run portion only
-            coords,
-          });
-          navigation.goBack();
+          try {
+            await addRun({
+              date: new Date().toISOString(),
+              durationSec: elapsed,
+              distanceM: distance, // total: walk + run
+              runDistanceM: runDistance, // run portion only
+              coords,
+            });
+            navigation.goBack();
+          } catch (e) {
+            Alert.alert('Could not save', 'Please try again.', [
+              { text: 'OK', onPress: handleResume },
+            ]);
+          }
         },
       },
     ]);

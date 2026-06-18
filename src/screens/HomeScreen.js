@@ -1,4 +1,3 @@
-import { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -7,10 +6,11 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getRuns, deleteRun } from '../storage';
+import { useQuery, useMutation } from 'convex/react';
+import { useAuthActions } from '@convex-dev/auth/react';
+import { api } from '../../convex/_generated/api';
 import {
   formatDistance,
   formatDuration,
@@ -22,21 +22,13 @@ import { colors, fonts } from '../theme';
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default function HomeScreen({ navigation }) {
-  const [runs, setRuns] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Reactive query — the list updates automatically when a run is added/removed.
+  const data = useQuery(api.runs.list);
+  const loading = data === undefined;
+  const runs = data ?? [];
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setRuns(await getRuns());
-    setLoading(false);
-  }, []);
-
-  // Reload every time the screen comes into focus (e.g. after saving a run).
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load])
-  );
+  const removeRun = useMutation(api.runs.remove);
+  const { signOut } = useAuthActions();
 
   const confirmDelete = (run) => {
     Alert.alert('Delete run?', 'This cannot be undone.', [
@@ -45,10 +37,20 @@ export default function HomeScreen({ navigation }) {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-          await deleteRun(run.id);
-          load();
+          try {
+            await removeRun({ id: run._id });
+          } catch (e) {
+            Alert.alert('Could not delete', 'Please try again.');
+          }
         },
       },
+    ]);
+  };
+
+  const confirmSignOut = () => {
+    Alert.alert('Sign out?', 'You can sign back in anytime.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign out', style: 'destructive', onPress: () => signOut() },
     ]);
   };
 
@@ -112,11 +114,18 @@ export default function HomeScreen({ navigation }) {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>YOUR RUNS</Text>
+        <TouchableOpacity
+          style={styles.signOut}
+          onPress={confirmSignOut}
+          hitSlop={10}
+        >
+          <Text style={styles.signOutText}>SIGN OUT</Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
         data={runs}
-        keyExtractor={(r) => r.id}
+        keyExtractor={(r) => r._id}
         renderItem={renderItem}
         ListHeaderComponent={ListHeader}
         contentContainerStyle={styles.list}
@@ -149,6 +158,9 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 8,
@@ -157,6 +169,16 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontFamily: fonts.display,
     fontSize: 44,
+    letterSpacing: 1,
+  },
+  signOut: {
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  signOutText: {
+    color: colors.textDim,
+    fontSize: 12,
+    fontWeight: '700',
     letterSpacing: 1,
   },
   list: { paddingHorizontal: 16, paddingBottom: 150 },

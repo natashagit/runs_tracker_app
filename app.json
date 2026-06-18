@@ -43,7 +43,8 @@
           "locationWhenInUsePermission": "Run Tracker uses your location to map the path of your runs."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-secure-store"
     ]
   }
 }
