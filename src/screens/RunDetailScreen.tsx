@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, type ColorValue } from 'react-native';
 import MapView, { Polyline, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   formatDistance,
   formatDuration,
@@ -8,9 +9,12 @@ import {
   regionForCoords,
   splitSegments,
 } from '../geo';
+import type { RootStackParamList } from '../navigation';
 import { colors } from '../theme';
 
-export default function RunDetailScreen({ route }) {
+type Props = NativeStackScreenProps<RootStackParamList, 'RunDetail'>;
+
+export default function RunDetailScreen({ route }: Props) {
   const { run } = route.params;
   const region = regionForCoords(run.coords);
   const start = run.coords[0];
@@ -19,12 +23,12 @@ export default function RunDetailScreen({ route }) {
   // Split into contiguous walk/run segments so each draws in its phase color.
   const segments = splitSegments(run.coords);
   // A point with no mode is a legacy run (saved before phases) — draw it neutral.
-  const colorFor = (m) =>
+  const colorFor = (m: string | undefined) =>
     m === 'run' ? colors.run : m === 'walk' ? colors.walk : colors.track;
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} initialRegion={region}>
+      <MapView style={styles.map} initialRegion={region ?? undefined}>
         {segments.map(
           (seg, i) =>
             seg.points.length > 1 && (
@@ -64,10 +68,12 @@ export default function RunDetailScreen({ route }) {
   );
 }
 
-function Stat({ label, value, color }) {
+type StatProps = { label: string; value: string; color?: ColorValue };
+
+function Stat({ label, value, color }: StatProps) {
   return (
     <View style={styles.stat}>
-      <Text style={[styles.statValue, color && { color }]}>{value}</Text>
+      <Text style={[styles.statValue, color ? { color } : null]}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );

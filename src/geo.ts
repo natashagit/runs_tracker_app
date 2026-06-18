@@ -2,9 +2,22 @@
 
 const R = 6371000; // Earth radius in meters
 
+// A bare geographic point.
+export type LatLng = { latitude: number; longitude: number };
+
+// A tracked point, tagged with the phase ('walk' | 'run') it was recorded in.
+// `mode` is optional so legacy/untagged points still type-check.
+export type Coord = LatLng & { mode?: string };
+
+// A map viewport, structurally compatible with react-native-maps' Region.
+export type Region = LatLng & { latitudeDelta: number; longitudeDelta: number };
+
+// A run of contiguous same-phase points, ready to draw as one colored line.
+export type Segment = { mode?: string; points: Coord[] };
+
 // Great-circle distance between two {latitude, longitude} points, in meters.
-export function haversine(a, b) {
-  const toRad = (d) => (d * Math.PI) / 180;
+export function haversine(a: LatLng, b: LatLng): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(b.latitude - a.latitude);
   const dLon = toRad(b.longitude - a.longitude);
   const lat1 = toRad(a.latitude);
@@ -16,7 +29,7 @@ export function haversine(a, b) {
 }
 
 // Total path length (meters) for an array of coordinates.
-export function pathDistance(coords) {
+export function pathDistance(coords: LatLng[]): number {
   let total = 0;
   for (let i = 1; i < coords.length; i++) {
     total += haversine(coords[i - 1], coords[i]);
@@ -26,7 +39,7 @@ export function pathDistance(coords) {
 
 // Distance (meters) traveled while in a given phase ('walk' or 'run').
 // Each step is credited to the phase of the point being moved TO.
-export function distanceByMode(coords, mode) {
+export function distanceByMode(coords: Coord[], mode: string): number {
   let total = 0;
   for (let i = 1; i < coords.length; i++) {
     if (coords[i].mode === mode) total += haversine(coords[i - 1], coords[i]);
@@ -37,8 +50,8 @@ export function distanceByMode(coords, mode) {
 // Break a tagged path into contiguous same-phase segments so each can be drawn
 // in its own color. Supports any number of walk/run switches. Each new segment
 // is seeded with the previous point so the colored lines join with no gap.
-export function splitSegments(coords) {
-  const segments = [];
+export function splitSegments(coords: Coord[]): Segment[] {
+  const segments: Segment[] = [];
   for (let i = 0; i < coords.length; i++) {
     const p = coords[i];
     const last = segments[segments.length - 1];
@@ -53,21 +66,21 @@ export function splitSegments(coords) {
 }
 
 // meters -> "3.42 km"
-export function formatDistance(m) {
+export function formatDistance(m: number): string {
   return `${(m / 1000).toFixed(2)} km`;
 }
 
 // seconds -> "32:10" or "1:05:09"
-export function formatDuration(totalSec) {
+export function formatDuration(totalSec: number): string {
   const sec = Math.floor(totalSec % 60);
   const min = Math.floor((totalSec / 60) % 60);
   const hr = Math.floor(totalSec / 3600);
-  const pad = (n) => String(n).padStart(2, '0');
+  const pad = (n: number) => String(n).padStart(2, '0');
   return hr > 0 ? `${hr}:${pad(min)}:${pad(sec)}` : `${min}:${pad(sec)}`;
 }
 
 // pace in min/km -> "5:30 /km", returns "--" when not enough data
-export function formatPace(durationSec, distanceM) {
+export function formatPace(durationSec: number, distanceM: number): string {
   if (distanceM < 10) return '--';
   const paceSecPerKm = durationSec / (distanceM / 1000);
   const min = Math.floor(paceSecPerKm / 60);
@@ -76,7 +89,7 @@ export function formatPace(durationSec, distanceM) {
 }
 
 // ISO date -> "Mon, Jun 8 · 4:32 PM"
-export function formatDate(iso) {
+export function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, {
     weekday: 'short',
@@ -89,7 +102,7 @@ export function formatDate(iso) {
 }
 
 // Compute a map region that fits all coordinates with padding.
-export function regionForCoords(coords) {
+export function regionForCoords(coords: LatLng[] | undefined): Region | null {
   if (!coords || coords.length === 0) return null;
   let minLat = coords[0].latitude;
   let maxLat = coords[0].latitude;

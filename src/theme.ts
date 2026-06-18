@@ -12,9 +12,9 @@ export const colors = {
   track: '#FF2D9B',     // pink route line (legacy / fallback)
   walk: '#00E0C7',      // teal — the WALK segment of a route
   run: '#FF2D9B',       // pink — the RUN segment of a route
-};
+} as const;
 
-// Display font (loaded in App.js). Use for big bold headlines, like Nike.
+// Display font (loaded in App.tsx). Use for big bold headlines, like Nike.
 export const fonts = {
   display: 'Anton_400Regular',
-};
+} as const;

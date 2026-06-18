@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer, DarkTheme } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme, type Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Anton_400Regular } from '@expo-google-fonts/anton';
@@ -16,12 +16,13 @@ import HomeScreen from './src/screens/HomeScreen';
 import TrackScreen from './src/screens/TrackScreen';
 import RunDetailScreen from './src/screens/RunDetailScreen';
 import AuthScreen from './src/screens/AuthScreen';
+import type { RootStackParamList } from './src/navigation';
 import { colors } from './src/theme';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 // Convex client. unsavedChangesWarning is web-only and noisy in React Native.
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL, {
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
   unsavedChangesWarning: false,
 });
 
@@ -32,7 +33,7 @@ const secureStorage = {
   removeItem: SecureStore.deleteItemAsync,
 };
 
-const navTheme = {
+const navTheme: Theme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,

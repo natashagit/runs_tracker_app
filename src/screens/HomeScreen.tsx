@@ -5,32 +5,39 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  type ListRenderItem,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery, useMutation } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { api } from '../../convex/_generated/api';
+import type { Doc } from '../../convex/_generated/dataModel';
 import {
   formatDistance,
   formatDuration,
   formatPace,
   formatDate,
 } from '../geo';
+import type { RootStackParamList } from '../navigation';
 import { colors, fonts } from '../theme';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-export default function HomeScreen({ navigation }) {
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+type Run = Doc<'runs'>;
+
+export default function HomeScreen({ navigation }: Props) {
   // Reactive query — the list updates automatically when a run is added/removed.
   const data = useQuery(api.runs.list);
   const loading = data === undefined;
-  const runs = data ?? [];
+  const runs: Run[] = data ?? [];
 
   const removeRun = useMutation(api.runs.remove);
   const { signOut } = useAuthActions();
 
-  const confirmDelete = (run) => {
+  const confirmDelete = (run: Run) => {
     Alert.alert('Delete run?', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -62,7 +69,7 @@ export default function HomeScreen({ navigation }) {
     0
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem: ListRenderItem<Run> = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.7}
@@ -131,14 +138,14 @@ export default function HomeScreen({ navigation }) {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          !loading && (
+          !loading ? (
             <View style={styles.empty}>
               <Text style={styles.emptyTitle}>NO RUNS YET</Text>
               <Text style={styles.emptyText}>
                 Tap START below to track your first run.
               </Text>
             </View>
-          )
+          ) : null
         }
       />
 

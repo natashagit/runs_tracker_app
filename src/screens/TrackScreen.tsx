@@ -10,32 +10,41 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Polyline, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   pathDistance,
   distanceByMode,
   splitSegments,
   formatDistance,
   formatDuration,
+  type Coord,
+  type Region,
 } from '../geo';
 import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import type { RootStackParamList } from '../navigation';
 import { colors, fonts } from '../theme';
 
-export default function TrackScreen({ navigation }) {
+type Props = NativeStackScreenProps<RootStackParamList, 'Track'>;
+type Permission = 'pending' | 'granted' | 'denied';
+type Status = 'idle' | 'running' | 'paused';
+type Mode = 'walk' | 'run';
+
+export default function TrackScreen({ navigation }: Props) {
   const addRun = useMutation(api.runs.add);
 
-  const [permission, setPermission] = useState('pending'); // pending | granted | denied
-  const [region, setRegion] = useState(null);
-  const [coords, setCoords] = useState([]);
+  const [permission, setPermission] = useState<Permission>('pending');
+  const [region, setRegion] = useState<Region | null>(null);
+  const [coords, setCoords] = useState<Coord[]>([]);
   const [elapsed, setElapsed] = useState(0);
-  const [status, setStatus] = useState('idle'); // idle | running | paused
-  const [mode, setMode] = useState('walk'); // walk | run
+  const [status, setStatus] = useState<Status>('idle');
+  const [mode, setMode] = useState<Mode>('walk');
 
-  const subRef = useRef(null);
-  const timerRef = useRef(null);
-  const statusRef = useRef('idle');
-  const modeRef = useRef('walk');
-  const mapRef = useRef(null);
+  const subRef = useRef<Location.LocationSubscription | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const statusRef = useRef<Status>('idle');
+  const modeRef = useRef<Mode>('walk');
+  const mapRef = useRef<MapView | null>(null);
 
   // Keep refs in sync with state so the GPS callback reads current values.
   useEffect(() => {
@@ -95,7 +104,7 @@ export default function TrackScreen({ navigation }) {
         // Drop low-accuracy noise.
         if (accuracy != null && accuracy > 35) return;
         // Tag each point with the phase it was recorded in (walk or run).
-        const point = { latitude, longitude, mode: modeRef.current };
+        const point: Coord = { latitude, longitude, mode: modeRef.current };
         setCoords((prev) => [...prev, point]);
         if (mapRef.current) {
           mapRef.current.animateCamera({ center: point }, { duration: 500 });
@@ -125,7 +134,7 @@ export default function TrackScreen({ navigation }) {
   // Toggle between walk and run. Points recorded after this are tagged with the
   // new phase and drawn in that phase's color. Flip it as often as you like.
   const handleToggleMode = () => {
-    const next = modeRef.current === 'run' ? 'walk' : 'run';
+    const next: Mode = modeRef.current === 'run' ? 'walk' : 'run';
     setMode(next);
     modeRef.current = next;
   };
@@ -217,7 +226,7 @@ export default function TrackScreen({ navigation }) {
       <MapView
         ref={mapRef}
         style={styles.map}
-        initialRegion={region}
+        initialRegion={region ?? undefined}
         showsUserLocation
         showsMyLocationButton={false}
         followsUserLocation={status === 'running'}
@@ -309,7 +318,9 @@ export default function TrackScreen({ navigation }) {
   );
 }
 
-function Stat({ label, value, big }) {
+type StatProps = { label: string; value: string; big?: boolean };
+
+function Stat({ label, value, big }: StatProps) {
   return (
     <View style={styles.stat}>
       <Text style={[styles.statValue, big && styles.statValueBig]}>{value}</Text>

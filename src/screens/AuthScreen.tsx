@@ -14,13 +14,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { colors, fonts } from '../theme';
 
+type Flow = 'signIn' | 'signUp';
+
 export default function AuthScreen() {
   const { signIn } = useAuthActions();
-  const [flow, setFlow] = useState('signIn'); // signIn | signUp
+  const [flow, setFlow] = useState<Flow>('signIn');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const isSignUp = flow === 'signUp';
 
@@ -34,7 +36,7 @@ export default function AuthScreen() {
     setSubmitting(true);
     try {
       await signIn('password', { email: trimmed, password, flow });
-      // On success the <Authenticated> tree in App.js takes over.
+      // On success the <Authenticated> tree in App.tsx takes over.
     } catch (e) {
       setError(
         isSignUp
