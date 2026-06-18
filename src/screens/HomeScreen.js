@@ -70,7 +70,20 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.accentBar} />
       <View style={styles.cardBody}>
         <Text style={styles.cardDate}>{formatDate(item.date)}</Text>
-        <Text style={styles.cardDistance}>{formatDistance(item.distanceM)}</Text>
+        <View style={styles.cardStatsRow}>
+          <View>
+            <Text style={styles.cardStatLabel}>TOTAL</Text>
+            <Text style={styles.cardDistance}>
+              {formatDistance(item.distanceM)}
+            </Text>
+          </View>
+          <View style={styles.cardStatRightCol}>
+            <Text style={styles.cardStatLabel}>RUN</Text>
+            <Text style={[styles.cardDistance, styles.cardRunDistance]}>
+              {formatDistance(item.runDistanceM ?? 0)}
+            </Text>
+          </View>
+        </View>
         <Text style={styles.cardMeta}>
           {formatDuration(item.durationSec)} ·{' '}
           {formatPace(item.durationSec, item.distanceM)}
@@ -188,13 +201,27 @@ const styles = StyleSheet.create({
   accentBar: { width: 5, backgroundColor: colors.accent2 },
   cardBody: { flex: 1, padding: 16 },
   cardDate: { color: colors.textDim, fontSize: 13 },
+  cardStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginTop: 8,
+  },
+  cardStatRightCol: { alignItems: 'flex-end' },
+  cardStatLabel: {
+    color: colors.textDim,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
   cardDistance: {
     color: colors.text,
     fontFamily: fonts.display,
     fontSize: 30,
-    marginTop: 6,
+    marginTop: 2,
   },
-  cardMeta: { color: colors.textDim, fontSize: 14, marginTop: 4 },
+  cardRunDistance: { color: colors.run },
+  cardMeta: { color: colors.textDim, fontSize: 14, marginTop: 8 },
 
   // Empty state
   empty: { alignItems: 'center', marginTop: 40, paddingHorizontal: 40 },

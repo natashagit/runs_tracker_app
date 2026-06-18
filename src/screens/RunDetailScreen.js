@@ -4,9 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   formatDistance,
   formatDuration,
-  formatPace,
   formatDate,
   regionForCoords,
+  splitSegments,
 } from '../geo';
 import { colors } from '../theme';
 
@@ -16,39 +16,25 @@ export default function RunDetailScreen({ route }) {
   const start = run.coords[0];
   const end = run.coords[run.coords.length - 1];
 
-  // Split into walk/run segments by each point's mode (same as TrackScreen).
-  const walkLine = run.coords.filter((p) => p.mode === 'walk');
-  const runPoints = run.coords.filter((p) => p.mode === 'run');
-  const runLine =
-    walkLine.length && runPoints.length
-      ? [walkLine[walkLine.length - 1], ...runPoints]
-      : runPoints;
-  // Older runs saved before phases existed have no mode — draw them as one line.
-  const isLegacy = walkLine.length === 0 && runPoints.length === 0;
+  // Split into contiguous walk/run segments so each draws in its phase color.
+  const segments = splitSegments(run.coords);
+  // A point with no mode is a legacy run (saved before phases) — draw it neutral.
+  const colorFor = (m) =>
+    m === 'run' ? colors.run : m === 'walk' ? colors.walk : colors.track;
 
   return (
     <View style={styles.container}>
       <MapView style={styles.map} initialRegion={region}>
-        {isLegacy && run.coords.length > 1 && (
-          <Polyline
-            coordinates={run.coords}
-            strokeColor={colors.track}
-            strokeWidth={5}
-          />
-        )}
-        {walkLine.length > 1 && (
-          <Polyline
-            coordinates={walkLine}
-            strokeColor={colors.walk}
-            strokeWidth={5}
-          />
-        )}
-        {runLine.length > 1 && (
-          <Polyline
-            coordinates={runLine}
-            strokeColor={colors.run}
-            strokeWidth={5}
-          />
+        {segments.map(
+          (seg, i) =>
+            seg.points.length > 1 && (
+              <Polyline
+                key={i}
+                coordinates={seg.points}
+                strokeColor={colorFor(seg.mode)}
+                strokeWidth={5}
+              />
+            )
         )}
         {start && (
           <Marker coordinate={start} title="Start" anchor={{ x: 0.5, y: 0.5 }}>
@@ -65,19 +51,23 @@ export default function RunDetailScreen({ route }) {
       <SafeAreaView style={styles.panel} edges={['bottom']}>
         <Text style={styles.date}>{formatDate(run.date)}</Text>
         <View style={styles.statsRow}>
-          <Stat label="Distance" value={formatDistance(run.distanceM)} />
+          <Stat label="Total" value={formatDistance(run.distanceM)} />
+          <Stat
+            label="Run"
+            value={formatDistance(run.runDistanceM ?? 0)}
+            color={colors.run}
+          />
           <Stat label="Time" value={formatDuration(run.durationSec)} />
-          <Stat label="Pace" value={formatPace(run.durationSec, run.distanceM)} />
         </View>
       </SafeAreaView>
     </View>
   );
 }
 
-function Stat({ label, value }) {
+function Stat({ label, value, color }) {
   return (
     <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
+      <Text style={[styles.statValue, color && { color }]}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );

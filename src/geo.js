@@ -24,6 +24,34 @@ export function pathDistance(coords) {
   return total;
 }
 
+// Distance (meters) traveled while in a given phase ('walk' or 'run').
+// Each step is credited to the phase of the point being moved TO.
+export function distanceByMode(coords, mode) {
+  let total = 0;
+  for (let i = 1; i < coords.length; i++) {
+    if (coords[i].mode === mode) total += haversine(coords[i - 1], coords[i]);
+  }
+  return total;
+}
+
+// Break a tagged path into contiguous same-phase segments so each can be drawn
+// in its own color. Supports any number of walk/run switches. Each new segment
+// is seeded with the previous point so the colored lines join with no gap.
+export function splitSegments(coords) {
+  const segments = [];
+  for (let i = 0; i < coords.length; i++) {
+    const p = coords[i];
+    const last = segments[segments.length - 1];
+    if (!last || last.mode !== p.mode) {
+      const seed = i > 0 ? [coords[i - 1]] : [];
+      segments.push({ mode: p.mode, points: [...seed, p] });
+    } else {
+      last.points.push(p);
+    }
+  }
+  return segments;
+}
+
 // meters -> "3.42 km"
 export function formatDistance(m) {
   return `${(m / 1000).toFixed(2)} km`;

@@ -10,7 +10,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Polyline, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { pathDistance, formatDistance, formatDuration, formatPace } from '../geo';
+import {
+  pathDistance,
+  distanceByMode,
+  splitSegments,
+  formatDistance,
+  formatDuration,
+} from '../geo';
 import { saveRun, makeId } from '../storage';
 import { colors, fonts } from '../theme';
 
@@ -67,17 +73,11 @@ export default function TrackScreen({ navigation }) {
   }, []);
 
   const distance = useMemo(() => pathDistance(coords), [coords]);
+  const runDistance = useMemo(() => distanceByMode(coords, 'run'), [coords]);
 
-  // Split the path into the walk segment and the run segment, by each point's
-  // mode, so we can draw them in different colors. The run line is seeded with
-  // the last walk point so the two colored lines connect with no gap.
-  const { walkLine, runLine } = useMemo(() => {
-    const walk = coords.filter((p) => p.mode === 'walk');
-    const run = coords.filter((p) => p.mode === 'run');
-    const runConnected =
-      walk.length && run.length ? [walk[walk.length - 1], ...run] : run;
-    return { walkLine: walk, runLine: runConnected };
-  }, [coords]);
+  // Break the path into contiguous walk/run segments so each draws in its own
+  // color. Works for any number of switches (sprint → walk → sprint …).
+  const segments = useMemo(() => splitSegments(coords), [coords]);
 
   const startWatching = async () => {
     subRef.current = await Location.watchPositionAsync(
@@ -119,11 +119,12 @@ export default function TrackScreen({ navigation }) {
     await startWatching();
   };
 
-  // Switch from the walk phase into the run phase. Points recorded from now on
-  // are tagged 'run' and drawn in the run color.
-  const handleStartRun = () => {
-    setMode('run');
-    modeRef.current = 'run';
+  // Toggle between walk and run. Points recorded after this are tagged with the
+  // new phase and drawn in that phase's color. Flip it as often as you like.
+  const handleToggleMode = () => {
+    const next = modeRef.current === 'run' ? 'walk' : 'run';
+    setMode(next);
+    modeRef.current = next;
   };
 
   const handlePause = () => {
@@ -164,7 +165,8 @@ export default function TrackScreen({ navigation }) {
             id: makeId(),
             date: new Date().toISOString(),
             durationSec: elapsed,
-            distanceM: distance,
+            distanceM: distance, // total: walk + run
+            runDistanceM: runDistance, // run portion only
             coords,
           });
           navigation.goBack();
@@ -212,19 +214,16 @@ export default function TrackScreen({ navigation }) {
         showsMyLocationButton={false}
         followsUserLocation={status === 'running'}
       >
-        {walkLine.length > 1 && (
-          <Polyline
-            coordinates={walkLine}
-            strokeColor={colors.walk}
-            strokeWidth={5}
-          />
-        )}
-        {runLine.length > 1 && (
-          <Polyline
-            coordinates={runLine}
-            strokeColor={colors.run}
-            strokeWidth={5}
-          />
+        {segments.map(
+          (seg, i) =>
+            seg.points.length > 1 && (
+              <Polyline
+                key={i}
+                coordinates={seg.points}
+                strokeColor={seg.mode === 'run' ? colors.run : colors.walk}
+                strokeWidth={5}
+              />
+            )
         )}
         {coords.length > 0 && (
           <Marker
@@ -246,17 +245,22 @@ export default function TrackScreen({ navigation }) {
 
         <View style={styles.statsRow}>
           <Stat label="Time" value={formatDuration(elapsed)} big />
-          <Stat label="Distance" value={formatDistance(distance)} big />
-          <Stat label="Pace" value={formatPace(elapsed, distance)} big />
+          <Stat label="Total" value={formatDistance(distance)} big />
+          <Stat label="Run" value={formatDistance(runDistance)} big />
         </View>
 
         <View style={styles.controls}>
-          {status === 'running' && mode === 'walk' && (
+          {status === 'running' && (
             <TouchableOpacity
-              style={[styles.button, styles.startRun]}
-              onPress={handleStartRun}
+              style={[
+                styles.button,
+                { backgroundColor: mode === 'run' ? colors.walk : colors.run },
+              ]}
+              onPress={handleToggleMode}
             >
-              <Text style={styles.startRunText}>START RUN</Text>
+              <Text style={styles.toggleText}>
+                {mode === 'run' ? 'START WALK' : 'START RUN'}
+              </Text>
             </TouchableOpacity>
           )}
 
@@ -377,11 +381,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  startRun: { backgroundColor: colors.run },
   resume: { backgroundColor: colors.accent },
   pause: { backgroundColor: colors.border },
   finish: { backgroundColor: colors.danger },
-  startRunText: {
+  toggleText: {
     color: colors.onAccent,
     fontFamily: fonts.display,
     fontSize: 18,
