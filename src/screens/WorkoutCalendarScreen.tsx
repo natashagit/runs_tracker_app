@@ -112,8 +112,10 @@ export default function WorkoutCalendarScreen({ navigation }: Props) {
                   <View
                     style={[
                       styles.dayCircle,
-                      isLogged && styles.dayLogged,
                       isToday && styles.dayToday,
+                      // A logged day is always teal — even today. This comes
+                      // last so a logged workout wins over the "today" color.
+                      isLogged && styles.dayLogged,
                     ]}
                   >
                     <Text

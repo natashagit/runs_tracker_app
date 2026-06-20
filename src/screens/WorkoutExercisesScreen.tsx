@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -146,7 +146,9 @@ export default function WorkoutExercisesScreen({ navigation, route }: Props) {
   const exercises = EXERCISES[category];
 
   const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [sessionLogged, setSessionLogged] = useState(false);
   const logExercise = useMutation(api.exerciseLogs.add);
+  const logWorkout = useMutation(api.workouts.add);
 
   const handleComplete = async (name: string, sets: number, reps: number) => {
     // Optimistically mark done; the row has already animated away.
@@ -170,6 +172,18 @@ export default function WorkoutExercisesScreen({ navigation, route }: Props) {
   };
 
   const doneCount = completed.size;
+  const allDone = exercises.length > 0 && doneCount === exercises.length;
+
+  // Once every exercise is logged, record the workout session for the day
+  // so it shows up in the Workouts list and the total count. Fires once.
+  useEffect(() => {
+    if (!allDone || sessionLogged) return;
+    setSessionLogged(true);
+    logWorkout({ date: new Date().toISOString(), title: category }).catch(() => {
+      setSessionLogged(false); // allow another attempt
+      Alert.alert('Could not save workout', 'Please try again.');
+    });
+  }, [allDone, sessionLogged, logWorkout, category]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -182,8 +196,10 @@ export default function WorkoutExercisesScreen({ navigation, route }: Props) {
       </TouchableOpacity>
       <View style={styles.header}>
         <Text style={styles.title}>{category.toUpperCase()}</Text>
-        <Text style={styles.subtitle}>
-          {doneCount}/{exercises.length} LOGGED · SWIPE LEFT TO LOG
+        <Text style={[styles.subtitle, allDone && styles.subtitleDone]}>
+          {allDone
+            ? '✓ WORKOUT LOGGED FOR TODAY'
+            : `${doneCount}/${exercises.length} LOGGED · SWIPE LEFT TO LOG`}
         </Text>
       </View>
 
@@ -231,6 +247,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginTop: 2,
   },
+  subtitleDone: { color: colors.walk },
   list: { paddingHorizontal: 16, paddingBottom: 40 },
 
   rowWrap: {
