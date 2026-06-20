@@ -60,18 +60,21 @@ export default function WorkoutsScreen({ navigation }: Props) {
   );
 
   const ListHeader = (
-    <LinearGradient
-      colors={['#00E0C7', '#1FB6FF']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.hero}
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={() => navigation.navigate('WorkoutCalendar')}
     >
-      <Text style={styles.heroLabel}>TOTAL WORKOUTS</Text>
-      <Text style={styles.heroValue}>{workouts.length}</Text>
-      <Text style={styles.heroSub}>
-        {workouts.length === 1 ? 'SESSION LOGGED' : 'SESSIONS LOGGED'}
-      </Text>
-    </LinearGradient>
+      <LinearGradient
+        colors={['#00E0C7', '#1FB6FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.hero}
+      >
+        <Text style={styles.heroLabel}>TOTAL WORKOUTS</Text>
+        <Text style={styles.heroValue}>{workouts.length}</Text>
+        <Text style={styles.heroSub}>TAP TO VIEW CALENDAR ›</Text>
+      </LinearGradient>
+    </TouchableOpacity>
   );
 
   return (

@@ -7,6 +7,7 @@ export type RootStackParamList = {
   Home: undefined;
   Runs: undefined;
   Workouts: undefined;
+  WorkoutCalendar: undefined;
   NewWorkout: undefined;
   WorkoutExercises: { category: WorkoutCategory };
   Track: undefined;

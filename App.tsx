@@ -15,6 +15,7 @@ import * as SecureStore from 'expo-secure-store';
 import LandingScreen from './src/screens/LandingScreen';
 import RunsScreen from './src/screens/RunsScreen';
 import WorkoutsScreen from './src/screens/WorkoutsScreen';
+import WorkoutCalendarScreen from './src/screens/WorkoutCalendarScreen';
 import NewWorkoutScreen from './src/screens/NewWorkoutScreen';
 import WorkoutExercisesScreen from './src/screens/WorkoutExercisesScreen';
 import TrackScreen from './src/screens/TrackScreen';
@@ -88,6 +89,11 @@ function MainStack() {
         <Stack.Screen
           name="Workouts"
           component={WorkoutsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="WorkoutCalendar"
+          component={WorkoutCalendarScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
