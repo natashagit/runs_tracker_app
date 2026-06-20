@@ -75,31 +75,44 @@ function ExerciseRow({
   const latest = useRef({ sets, reps, onComplete });
   latest.current = { sets, reps, onComplete };
 
+  // All animations use the same (JS) driver as the drag below. Mixing the
+  // native driver here would make the *next* swipe stutter.
+  const settle = () =>
+    Animated.spring(translateX, {
+      toValue: 0,
+      useNativeDriver: false,
+      bounciness: 6,
+      speed: 18,
+    }).start();
+
   const pan = useRef(
     PanResponder.create({
+      // Only claim the gesture for a clear horizontal drag, so vertical
+      // scrolling and the +/- steppers keep working.
       onMoveShouldSetPanResponder: (_e, g) =>
-        Math.abs(g.dx) > 10 && Math.abs(g.dx) > Math.abs(g.dy),
+        g.dx < -6 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+      // Don't let the parent ScrollView yank the gesture away mid-swipe.
+      onPanResponderTerminationRequest: () => false,
       onPanResponderMove: (_e, g) => {
-        if (g.dx < 0) translateX.setValue(g.dx);
+        // Follow the finger left only; clamp so the card can't drift right.
+        translateX.setValue(Math.min(0, g.dx));
       },
       onPanResponderRelease: (_e, g) => {
         if (g.dx < -SWIPE_THRESHOLD) {
           Animated.timing(translateX, {
             toValue: -SCREEN_W,
-            duration: 180,
-            useNativeDriver: true,
+            duration: 160,
+            useNativeDriver: false,
           }).start(() => {
             const { sets: s, reps: r, onComplete: cb } = latest.current;
             cb(name, s, r);
           });
         } else {
-          Animated.spring(translateX, {
-            toValue: 0,
-            useNativeDriver: true,
-            bounciness: 6,
-          }).start();
+          settle();
         }
       },
+      // If the gesture is interrupted, snap the card back cleanly.
+      onPanResponderTerminate: settle,
     })
   ).current;
 
