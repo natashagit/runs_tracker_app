@@ -23,4 +23,11 @@ export default defineSchema({
       })
     ),
   }).index("by_user", ["userId"]),
+
+  // One row per logged gym workout, owned by the user who did it.
+  workouts: defineTable({
+    userId: v.id("users"),
+    date: v.string(), // ISO timestamp — kept for display + sort parity
+    title: v.string(), // e.g. "Leg Day", "Upper Body"
+  }).index("by_user", ["userId"]),
 });

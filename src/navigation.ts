@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Home: undefined;
   Runs: undefined;
   Workouts: undefined;
+  NewWorkout: undefined;
   Track: undefined;
   RunDetail: { run: Doc<'runs'> };
 };
