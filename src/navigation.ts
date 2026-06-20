@@ -10,6 +10,9 @@ export type RootStackParamList = {
   WorkoutCalendar: undefined;
   NewWorkout: undefined;
   WorkoutExercises: { category: WorkoutCategory };
+  // A logged workout's detail. `date` is any ISO timestamp on the target day;
+  // `title` (category) narrows to one workout, omit it to show the whole day.
+  WorkoutDetail: { date: string; title?: string };
   Track: undefined;
   RunDetail: { run: Doc<'runs'> };
 };

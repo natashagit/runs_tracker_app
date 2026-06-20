@@ -107,26 +107,46 @@ export default function WorkoutCalendarScreen({ navigation }: Props) {
               const key = dayKey(view.year, view.month, day);
               const isToday = key === todayKey;
               const isLogged = loggedDays.has(key);
-              return (
-                <View key={di} style={styles.cell}>
-                  <View
+              const circle = (
+                <View
+                  style={[
+                    styles.dayCircle,
+                    isToday && styles.dayToday,
+                    // A logged day is always teal — even today. This comes
+                    // last so a logged workout wins over the "today" color.
+                    isLogged && styles.dayLogged,
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.dayCircle,
-                      isToday && styles.dayToday,
-                      // A logged day is always teal — even today. This comes
-                      // last so a logged workout wins over the "today" color.
-                      isLogged && styles.dayLogged,
+                      styles.dayText,
+                      (isLogged || isToday) && styles.dayTextOn,
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.dayText,
-                        (isLogged || isToday) && styles.dayTextOn,
-                      ]}
-                    >
-                      {day}
-                    </Text>
-                  </View>
+                    {day}
+                  </Text>
+                </View>
+              );
+              // Logged days are tappable and open that day's workout detail.
+              if (isLogged) {
+                return (
+                  <TouchableOpacity
+                    key={di}
+                    style={styles.cell}
+                    activeOpacity={0.7}
+                    onPress={() =>
+                      navigation.navigate('WorkoutDetail', {
+                        date: new Date(view.year, view.month, day).toISOString(),
+                      })
+                    }
+                  >
+                    {circle}
+                  </TouchableOpacity>
+                );
+              }
+              return (
+                <View key={di} style={styles.cell}>
+                  {circle}
                 </View>
               );
             })}

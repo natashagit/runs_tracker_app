@@ -49,6 +49,12 @@ export default function WorkoutsScreen({ navigation }: Props) {
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.7}
+      onPress={() =>
+        navigation.navigate('WorkoutDetail', {
+          date: item.date,
+          title: item.title,
+        })
+      }
       onLongPress={() => confirmDelete(item)}
     >
       <View style={styles.accentBar} />
