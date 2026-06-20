@@ -25,10 +25,10 @@ import { colors, fonts } from '../theme';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'Runs'>;
 type Run = Doc<'runs'>;
 
-export default function HomeScreen({ navigation }: Props) {
+export default function RunsScreen({ navigation }: Props) {
   // Reactive query — the list updates automatically when a run is added/removed.
   const data = useQuery(api.runs.list);
   const loading = data === undefined;
@@ -119,6 +119,13 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <TouchableOpacity
+        style={styles.back}
+        onPress={() => navigation.goBack()}
+        hitSlop={10}
+      >
+        <Text style={styles.backText}>‹ HOME</Text>
+      </TouchableOpacity>
       <View style={styles.header}>
         <Text style={styles.title}>YOUR RUNS</Text>
         <TouchableOpacity
@@ -164,6 +171,16 @@ export default function HomeScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
+  back: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+  },
+  backText: {
+    color: colors.textDim,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

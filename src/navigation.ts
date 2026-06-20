@@ -4,6 +4,8 @@ import type { Doc } from '../convex/_generated/dataModel';
 // `undefined` means the screen takes no params.
 export type RootStackParamList = {
   Home: undefined;
+  Runs: undefined;
+  Workouts: undefined;
   Track: undefined;
   RunDetail: { run: Doc<'runs'> };
 };

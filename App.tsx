@@ -12,7 +12,9 @@ import {
 } from 'convex/react';
 import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import * as SecureStore from 'expo-secure-store';
-import HomeScreen from './src/screens/HomeScreen';
+import LandingScreen from './src/screens/LandingScreen';
+import RunsScreen from './src/screens/RunsScreen';
+import WorkoutsScreen from './src/screens/WorkoutsScreen';
 import TrackScreen from './src/screens/TrackScreen';
 import RunDetailScreen from './src/screens/RunDetailScreen';
 import AuthScreen from './src/screens/AuthScreen';
@@ -73,8 +75,18 @@ function MainStack() {
       >
         <Stack.Screen
           name="Home"
-          component={HomeScreen}
+          component={LandingScreen}
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Runs"
+          component={RunsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Workouts"
+          component={WorkoutsScreen}
+          options={{ title: 'Workouts' }}
         />
         <Stack.Screen
           name="Track"
