@@ -16,16 +16,38 @@ export const list = query({
   },
 });
 
-// Log a workout for the signed-in user.
-export const add = mutation({
+// Record that the signed-in user did a workout category on a given day.
+// There is at most one row per day: if a workout already exists for `day`,
+// the new category is appended to its title ("Back" -> "Back + Arms") rather
+// than creating a second row. Re-logging the same category is a no-op.
+export const logForDay = mutation({
   args: {
     date: v.string(),
-    title: v.string(),
+    day: v.string(), // local day key from the client ("YYYY-M-D")
+    title: v.string(), // the category just completed, e.g. "Arms"
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { date, day, title }) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) throw new Error("Not authenticated");
-    return await ctx.db.insert("workouts", { userId, ...args });
+
+    const existing = await ctx.db
+      .query("workouts")
+      .withIndex("by_user_and_day", (q) =>
+        q.eq("userId", userId).eq("day", day)
+      )
+      .first();
+
+    if (existing) {
+      const parts = existing.title.split(" + ");
+      if (!parts.includes(title)) {
+        await ctx.db.patch(existing._id, {
+          title: [...parts, title].join(" + "),
+        });
+      }
+      return existing._id;
+    }
+
+    return await ctx.db.insert("workouts", { userId, date, day, title });
   },
 });
 

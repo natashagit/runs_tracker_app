@@ -4,12 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from 'convex/react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { api } from '../../convex/_generated/api';
-import type { Doc } from '../../convex/_generated/dataModel';
 import type { RootStackParamList } from '../navigation';
 import { colors, fonts } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WorkoutDetail'>;
-type ExerciseLog = Doc<'exerciseLogs'>;
 
 // Stable local-date key (year-month-day), matching the calendar's logic so a
 // log lands on the same day the user tapped regardless of the time of day.
@@ -22,24 +20,25 @@ export default function WorkoutDetailScreen({ navigation, route }: Props) {
 
   const targetKey = dayKey(new Date(date));
 
-  // The exercises logged on this day, grouped by workout category. When a
-  // `title` is passed (coming from a single workout card) we narrow to just
-  // that category; from the calendar we show every category done that day.
-  const groups = useMemo(() => {
-    const byCategory = new Map<string, ExerciseLog[]>();
-    for (const log of logs ?? []) {
-      if (dayKey(new Date(log.date)) !== targetKey) continue;
-      if (title && log.workout !== title) continue;
-      const list = byCategory.get(log.workout) ?? [];
-      list.push(log);
-      byCategory.set(log.workout, list);
+  // Every exercise logged on this day, as one combined list (in log order).
+  // A day may include more than one category (e.g. Back then Arms) — they're
+  // shown together here, not split into separate sections.
+  const dayLogs = useMemo(() => {
+    return (logs ?? [])
+      .filter((log) => dayKey(new Date(log.date)) === targetKey)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [logs, targetKey]);
+
+  // The day's title is the distinct categories joined: "Back + Arms". Derived
+  // from the logs so it's correct from either entry point; falls back to any
+  // title passed in, then a generic label.
+  const headerTitle = useMemo(() => {
+    const cats: string[] = [];
+    for (const log of dayLogs) {
+      if (!cats.includes(log.workout)) cats.push(log.workout);
     }
-    // Within a category, show exercises in the order they were logged.
-    return Array.from(byCategory.entries()).map(([category, items]) => ({
-      category,
-      items: items.sort((a, b) => a.date.localeCompare(b.date)),
-    }));
-  }, [logs, targetKey, title]);
+    return cats.join(' + ') || title || 'Workout';
+  }, [dayLogs, title]);
 
   const dateLabel = new Date(date).toLocaleDateString(undefined, {
     weekday: 'long',
@@ -48,7 +47,7 @@ export default function WorkoutDetailScreen({ navigation, route }: Props) {
     year: 'numeric',
   });
 
-  const isEmpty = !loading && groups.length === 0;
+  const isEmpty = !loading && dayLogs.length === 0;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -60,7 +59,7 @@ export default function WorkoutDetailScreen({ navigation, route }: Props) {
         <Text style={styles.backText}>‹ BACK</Text>
       </TouchableOpacity>
       <View style={styles.header}>
-        <Text style={styles.title}>{title ? title.toUpperCase() : 'WORKOUT'}</Text>
+        <Text style={styles.title}>{headerTitle.toUpperCase()}</Text>
         <Text style={styles.subtitle}>{dateLabel}</Text>
       </View>
 
@@ -76,27 +75,21 @@ export default function WorkoutDetailScreen({ navigation, route }: Props) {
             </Text>
           </View>
         ) : (
-          groups.map((group) => (
-            <View key={group.category} style={styles.group}>
-              {/* Only show a category heading when more than one category was
-                  done that day (i.e. when we didn't narrow to a title). */}
-              {!title && (
-                <Text style={styles.groupHeading}>
-                  {group.category.toUpperCase()}
-                </Text>
-              )}
-              {group.items.map((log) => (
-                <View key={log._id} style={styles.card}>
-                  <View style={styles.accentBar} />
-                  <View style={styles.cardBody}>
-                    <Text style={styles.exName}>{log.exercise}</Text>
-                    <Text style={styles.exMeta}>
-                      {log.sets} × {log.reps}
-                      <Text style={styles.exMetaDim}>  SETS × REPS</Text>
-                    </Text>
-                  </View>
+          dayLogs.map((log) => (
+            <View key={log._id} style={styles.card}>
+              <View style={styles.accentBar} />
+              <View style={styles.cardBody}>
+                <View style={styles.exHeader}>
+                  <Text style={styles.exName}>{log.exercise}</Text>
+                  {/* Small tag so Back vs Arms exercises stay distinguishable
+                      within the single combined list. */}
+                  <Text style={styles.exTag}>{log.workout.toUpperCase()}</Text>
                 </View>
-              ))}
+                <Text style={styles.exMeta}>
+                  {log.sets} × {log.reps}
+                  <Text style={styles.exMetaDim}>  SETS × REPS</Text>
+                </Text>
+              </View>
             </View>
           ))
         )}
@@ -134,17 +127,6 @@ const styles = StyleSheet.create({
   },
   list: { paddingHorizontal: 16, paddingBottom: 40 },
 
-  group: { marginBottom: 8 },
-  groupHeading: {
-    color: colors.walk,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    marginTop: 12,
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-
   card: {
     flexDirection: 'row',
     backgroundColor: colors.card,
@@ -160,11 +142,24 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
   },
+  exHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   exName: {
     color: colors.text,
     fontFamily: fonts.display,
     fontSize: 22,
     letterSpacing: 0.5,
+    flexShrink: 1,
+  },
+  exTag: {
+    color: colors.walk,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+    marginLeft: 10,
   },
   exMeta: {
     color: colors.text,

@@ -162,7 +162,7 @@ export default function WorkoutExercisesScreen({ navigation, route }: Props) {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [sessionLogged, setSessionLogged] = useState(false);
   const logExercise = useMutation(api.exerciseLogs.add);
-  const logWorkout = useMutation(api.workouts.add);
+  const logWorkout = useMutation(api.workouts.logForDay);
 
   const handleComplete = async (name: string, sets: number, reps: number) => {
     // Optimistically mark done; the row has already animated away.
@@ -193,7 +193,11 @@ export default function WorkoutExercisesScreen({ navigation, route }: Props) {
   useEffect(() => {
     if (!allDone || sessionLogged) return;
     setSessionLogged(true);
-    logWorkout({ date: new Date().toISOString(), title: category }).catch(() => {
+    const now = new Date();
+    // Local day key — must match the calendar / detail screen so this merges
+    // into the same day's row.
+    const day = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+    logWorkout({ date: now.toISOString(), day, title: category }).catch(() => {
       setSessionLogged(false); // allow another attempt
       Alert.alert('Could not save workout', 'Please try again.');
     });

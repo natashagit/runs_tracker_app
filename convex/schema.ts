@@ -24,12 +24,18 @@ export default defineSchema({
     ),
   }).index("by_user", ["userId"]),
 
-  // One row per logged gym workout, owned by the user who did it.
+  // One row per DAY the user logged a workout. Multiple categories done on the
+  // same day are merged into this single row (title becomes "Back + Arms").
   workouts: defineTable({
     userId: v.id("users"),
-    date: v.string(), // ISO timestamp — kept for display + sort parity
-    title: v.string(), // e.g. "Leg Day", "Upper Body"
-  }).index("by_user", ["userId"]),
+    date: v.string(), // ISO timestamp of the first log that day (display + sort)
+    // Local day key ("YYYY-M-D"). Optional only so any pre-existing rows still
+    // validate; every new row sets it. Enforces one workout row per day.
+    day: v.optional(v.string()),
+    title: v.string(), // categories joined with " + ", e.g. "Back + Arms"
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_day", ["userId", "day"]),
 
   // One row per completed exercise, logged when swiped done in a workout.
   exerciseLogs: defineTable({
