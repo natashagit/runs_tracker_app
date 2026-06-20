@@ -30,4 +30,14 @@ export default defineSchema({
     date: v.string(), // ISO timestamp — kept for display + sort parity
     title: v.string(), // e.g. "Leg Day", "Upper Body"
   }).index("by_user", ["userId"]),
+
+  // One row per completed exercise, logged when swiped done in a workout.
+  exerciseLogs: defineTable({
+    userId: v.id("users"),
+    date: v.string(), // ISO timestamp of when it was completed
+    workout: v.string(), // category, e.g. "Arms", "Legs"
+    exercise: v.string(), // e.g. "Bicep Curl"
+    sets: v.number(),
+    reps: v.number(),
+  }).index("by_user", ["userId"]),
 });

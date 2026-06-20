@@ -16,6 +16,7 @@ import LandingScreen from './src/screens/LandingScreen';
 import RunsScreen from './src/screens/RunsScreen';
 import WorkoutsScreen from './src/screens/WorkoutsScreen';
 import NewWorkoutScreen from './src/screens/NewWorkoutScreen';
+import WorkoutExercisesScreen from './src/screens/WorkoutExercisesScreen';
 import TrackScreen from './src/screens/TrackScreen';
 import RunDetailScreen from './src/screens/RunDetailScreen';
 import AuthScreen from './src/screens/AuthScreen';
@@ -92,6 +93,11 @@ function MainStack() {
         <Stack.Screen
           name="NewWorkout"
           component={NewWorkoutScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="WorkoutExercises"
+          component={WorkoutExercisesScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
