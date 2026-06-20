@@ -15,7 +15,12 @@ import { useMutation } from 'convex/react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { api } from '../../convex/_generated/api';
 import type { RootStackParamList } from '../navigation';
-import { EXERCISES, DEFAULT_SETS, DEFAULT_REPS } from '../workoutCatalog';
+import {
+  EXERCISES,
+  DEFAULT_SETS,
+  DEFAULT_REPS,
+  CATEGORY_DEFAULTS,
+} from '../workoutCatalog';
 import { colors, fonts } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WorkoutExercises'>;
@@ -61,14 +66,18 @@ function Stepper({
 function ExerciseRow({
   name,
   completed,
+  defaultSets,
+  defaultReps,
   onComplete,
 }: {
   name: string;
   completed: boolean;
+  defaultSets: number;
+  defaultReps: number;
   onComplete: (name: string, sets: number, reps: number) => void;
 }) {
-  const [sets, setSets] = useState(DEFAULT_SETS);
-  const [reps, setReps] = useState(DEFAULT_REPS);
+  const [sets, setSets] = useState(defaultSets);
+  const [reps, setReps] = useState(defaultReps);
   const translateX = useRef(new Animated.Value(0)).current;
 
   // Keep the latest values/callback so the PanResponder closure isn't stale.
@@ -158,6 +167,10 @@ function ExerciseRow({
 export default function WorkoutExercisesScreen({ navigation, route }: Props) {
   const { category } = route.params;
   const exercises = EXERCISES[category];
+  const defaults = CATEGORY_DEFAULTS[category] ?? {
+    sets: DEFAULT_SETS,
+    reps: DEFAULT_REPS,
+  };
 
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [sessionLogged, setSessionLogged] = useState(false);
@@ -230,6 +243,8 @@ export default function WorkoutExercisesScreen({ navigation, route }: Props) {
             key={name}
             name={name}
             completed={completed.has(name)}
+            defaultSets={defaults.sets}
+            defaultReps={defaults.reps}
             onComplete={handleComplete}
           />
         ))}
