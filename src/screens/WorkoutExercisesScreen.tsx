@@ -21,7 +21,8 @@ import { colors, fonts } from '../theme';
 type Props = NativeStackScreenProps<RootStackParamList, 'WorkoutExercises'>;
 
 const SCREEN_W = Dimensions.get('window').width;
-const SWIPE_THRESHOLD = Math.max(120, SCREEN_W * 0.35);
+// A short left swipe logs the exercise — no need to drag all the way across.
+const SWIPE_THRESHOLD = 56;
 
 // A small "− value +" stepper. Increments by 1, never below `min`.
 function Stepper({
