@@ -19,17 +19,24 @@ const MONTHS = [
 const dayKey = (y: number, m: number, d: number) => `${y}-${m}-${d}`;
 
 export default function WorkoutCalendarScreen({ navigation }: Props) {
-  const logs = useQuery(api.exerciseLogs.list);
+  const workouts = useQuery(api.workouts.list);
 
-  // The set of local days that have at least one logged exercise.
-  const loggedDays = useMemo(() => {
-    const set = new Set<string>();
-    for (const log of logs ?? []) {
-      const d = new Date(log.date);
-      set.add(dayKey(d.getFullYear(), d.getMonth(), d.getDate()));
+  // Days are colored by their session state:
+  //  - completedDays: session stopped -> teal.
+  //  - activeDays: started/logged but not yet stopped -> still in progress.
+  // A row with `completed === false` is in progress; anything else (true, or a
+  // legacy row with no flag) counts as completed/done.
+  const { completedDays, activeDays } = useMemo(() => {
+    const completed = new Set<string>();
+    const active = new Set<string>();
+    for (const w of workouts ?? []) {
+      const d = new Date(w.date);
+      const key = w.day ?? dayKey(d.getFullYear(), d.getMonth(), d.getDate());
+      if (w.completed === false) active.add(key);
+      else completed.add(key);
     }
-    return set;
-  }, [logs]);
+    return { completedDays: completed, activeDays: active };
+  }, [workouts]);
 
   const today = new Date();
   const todayKey = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
@@ -106,29 +113,32 @@ export default function WorkoutCalendarScreen({ navigation }: Props) {
               }
               const key = dayKey(view.year, view.month, day);
               const isToday = key === todayKey;
-              const isLogged = loggedDays.has(key);
+              const isCompleted = completedDays.has(key);
+              const isActive = activeDays.has(key);
+              const hasWorkout = isCompleted || isActive;
               const circle = (
                 <View
                   style={[
                     styles.dayCircle,
                     isToday && styles.dayToday,
-                    // A logged day is always teal — even today. This comes
-                    // last so a logged workout wins over the "today" color.
-                    isLogged && styles.dayLogged,
+                    // Teal only once the session is stopped (completed). An
+                    // in-progress day stays on the "today" color. This comes
+                    // last so completion wins over the today color.
+                    isCompleted && styles.dayLogged,
                   ]}
                 >
                   <Text
                     style={[
                       styles.dayText,
-                      (isLogged || isToday) && styles.dayTextOn,
+                      (isCompleted || isToday) && styles.dayTextOn,
                     ]}
                   >
                     {day}
                   </Text>
                 </View>
               );
-              // Logged days are tappable and open that day's workout detail.
-              if (isLogged) {
+              // Any day with a workout (in progress or done) opens its detail.
+              if (hasWorkout) {
                 return (
                   <TouchableOpacity
                     key={di}
@@ -157,7 +167,7 @@ export default function WorkoutCalendarScreen({ navigation }: Props) {
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: colors.walk }]} />
-          <Text style={styles.legendText}>WORKOUT LOGGED</Text>
+          <Text style={styles.legendText}>COMPLETED</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: colors.accent2 }]} />

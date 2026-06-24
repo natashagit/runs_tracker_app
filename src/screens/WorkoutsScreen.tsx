@@ -20,6 +20,14 @@ import { colors, fonts } from '../theme';
 type Props = NativeStackScreenProps<RootStackParamList, 'Workouts'>;
 type Workout = Doc<'workouts'>;
 
+// Local day key ("YYYY-M-D") for a stored workout row — prefers the explicit
+// `day` field, falling back to the timestamp for any legacy row.
+const dayKeyOf = (w: Workout) => {
+  if (w.day) return w.day;
+  const d = new Date(w.date);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+};
+
 export default function WorkoutsScreen({ navigation }: Props) {
   // Reactive query — the list updates automatically when a workout is logged/removed.
   const data = useQuery(api.workouts.list);
@@ -27,6 +35,33 @@ export default function WorkoutsScreen({ navigation }: Props) {
   const workouts: Workout[] = data ?? [];
 
   const removeWorkout = useMutation(api.workouts.remove);
+  const startDay = useMutation(api.workouts.startDay);
+  const stopDay = useMutation(api.workouts.stopDay);
+
+  // Today's session state drives the START/STOP button.
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  const todayRow = workouts.find((w) => dayKeyOf(w) === todayKey);
+  const sessionActive = todayRow?.completed === false;
+
+  const handleStart = async () => {
+    const at = new Date();
+    const day = `${at.getFullYear()}-${at.getMonth()}-${at.getDate()}`;
+    try {
+      await startDay({ date: at.toISOString(), day });
+    } catch (e) {
+      // Non-fatal: still let them pick a workout; logging will create the row.
+    }
+    navigation.navigate('NewWorkout');
+  };
+
+  const handleStop = async () => {
+    try {
+      await stopDay({ day: todayKey });
+    } catch (e) {
+      Alert.alert('Could not stop workout', 'Please try again.');
+    }
+  };
 
   const confirmDelete = (workout: Workout) => {
     Alert.alert('Delete workout?', 'This cannot be undone.', [
@@ -59,7 +94,7 @@ export default function WorkoutsScreen({ navigation }: Props) {
     >
       <View style={styles.accentBar} />
       <View style={styles.cardBody}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.cardTitle}>{item.title || 'IN PROGRESS'}</Text>
         <Text style={styles.cardDate}>{formatDate(item.date)}</Text>
       </View>
     </TouchableOpacity>
@@ -117,11 +152,18 @@ export default function WorkoutsScreen({ navigation }: Props) {
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={styles.startButton}
+          style={[styles.startButton, sessionActive && styles.stopButton]}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('NewWorkout')}
+          onPress={sessionActive ? handleStop : handleStart}
         >
-          <Text style={styles.startButtonText}>START</Text>
+          <Text
+            style={[
+              styles.startButtonText,
+              sessionActive && styles.stopButtonText,
+            ]}
+          >
+            {sessionActive ? 'STOP' : 'START'}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -259,4 +301,10 @@ const styles = StyleSheet.create({
     fontSize: 22,
     letterSpacing: 1,
   },
+  // Active session: pink button reading STOP.
+  stopButton: {
+    backgroundColor: colors.accent2,
+    shadowColor: colors.accent2,
+  },
+  stopButtonText: { color: '#FFFFFF' },
 });

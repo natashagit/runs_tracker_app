@@ -33,6 +33,9 @@ export default defineSchema({
     // validate; every new row sets it. Enforces one workout row per day.
     day: v.optional(v.string()),
     title: v.string(), // categories joined with " + ", e.g. "Back + Arms"
+    // false while a session is in progress (started, not yet stopped); true
+    // once the user presses STOP. Undefined on legacy rows -> treated as done.
+    completed: v.optional(v.boolean()),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_day", ["userId", "day"]),

@@ -38,7 +38,7 @@ export const logForDay = mutation({
       .first();
 
     if (existing) {
-      const parts = existing.title.split(" + ");
+      const parts = existing.title ? existing.title.split(" + ") : [];
       if (!parts.includes(title)) {
         await ctx.db.patch(existing._id, {
           title: [...parts, title].join(" + "),
@@ -47,7 +47,67 @@ export const logForDay = mutation({
       return existing._id;
     }
 
-    return await ctx.db.insert("workouts", { userId, date, day, title });
+    return await ctx.db.insert("workouts", {
+      userId,
+      date,
+      day,
+      title,
+      completed: false, // in progress until the user presses STOP
+    });
+  },
+});
+
+// Begin (or re-open) today's workout session. Ensures a row exists for the day
+// and marks it not-yet-completed, so the STOP button and calendar reflect an
+// active session immediately — before any exercise is logged.
+export const startDay = mutation({
+  args: { date: v.string(), day: v.string() },
+  handler: async (ctx, { date, day }) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) throw new Error("Not authenticated");
+
+    const existing = await ctx.db
+      .query("workouts")
+      .withIndex("by_user_and_day", (q) =>
+        q.eq("userId", userId).eq("day", day)
+      )
+      .first();
+
+    if (existing) {
+      if (existing.completed !== false) {
+        await ctx.db.patch(existing._id, { completed: false });
+      }
+      return existing._id;
+    }
+
+    return await ctx.db.insert("workouts", {
+      userId,
+      date,
+      day,
+      title: "",
+      completed: false,
+    });
+  },
+});
+
+// End today's session: mark the day's workout completed. This is what turns
+// the calendar bubble teal. No-op if there's no row for the day.
+export const stopDay = mutation({
+  args: { day: v.string() },
+  handler: async (ctx, { day }) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) throw new Error("Not authenticated");
+
+    const existing = await ctx.db
+      .query("workouts")
+      .withIndex("by_user_and_day", (q) =>
+        q.eq("userId", userId).eq("day", day)
+      )
+      .first();
+
+    if (!existing) return null;
+    await ctx.db.patch(existing._id, { completed: true });
+    return existing._id;
   },
 });
 
