@@ -94,7 +94,9 @@ export default function WorkoutsScreen({ navigation }: Props) {
     >
       <View style={styles.accentBar} />
       <View style={styles.cardBody}>
-        <Text style={styles.cardTitle}>{item.title || 'IN PROGRESS'}</Text>
+        <Text style={styles.cardTitle}>
+          {item.title || (item.completed === false ? 'IN PROGRESS' : 'WORKOUT')}
+        </Text>
         <Text style={styles.cardDate}>{formatDate(item.date)}</Text>
       </View>
     </TouchableOpacity>
