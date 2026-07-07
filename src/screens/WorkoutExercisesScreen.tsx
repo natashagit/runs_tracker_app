@@ -201,10 +201,11 @@ export default function WorkoutExercisesScreen({ navigation, route }: Props) {
   const doneCount = completed.size;
   const allDone = exercises.length > 0 && doneCount === exercises.length;
 
-  // Once every exercise is logged, record the workout session for the day
-  // so it shows up in the Workouts list and the total count. Fires once.
+  // As soon as the first exercise is logged, record the workout session for
+  // the day so it shows up in the Workouts list and the total count — even if
+  // the user stops before finishing every exercise. Fires once.
   useEffect(() => {
-    if (!allDone || sessionLogged) return;
+    if (doneCount === 0 || sessionLogged) return;
     setSessionLogged(true);
     const now = new Date();
     // Local day key — must match the calendar / detail screen so this merges
@@ -214,7 +215,7 @@ export default function WorkoutExercisesScreen({ navigation, route }: Props) {
       setSessionLogged(false); // allow another attempt
       Alert.alert('Could not save workout', 'Please try again.');
     });
-  }, [allDone, sessionLogged, logWorkout, category]);
+  }, [doneCount, sessionLogged, logWorkout, category]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
