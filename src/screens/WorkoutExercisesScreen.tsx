@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { useMutation } from 'convex/react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { api } from '../../convex/_generated/api';
@@ -21,6 +22,7 @@ import {
   DEFAULT_REPS,
   CATEGORY_DEFAULTS,
 } from '../workoutCatalog';
+import { exerciseGif } from '../exerciseGifs';
 import { colors, fonts } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WorkoutExercises'>;
@@ -78,6 +80,7 @@ function ExerciseRow({
 }) {
   const [sets, setSets] = useState(defaultSets);
   const [reps, setReps] = useState(defaultReps);
+  const gif = exerciseGif(name);
   const translateX = useRef(new Animated.Value(0)).current;
 
   // Keep the latest values/callback so the PanResponder closure isn't stale.
@@ -159,6 +162,9 @@ function ExerciseRow({
             <Stepper label="REPS" value={reps} min={1} onChange={setReps} />
           </View>
         </View>
+        {gif != null && (
+          <Image source={gif} style={styles.gif} contentFit="cover" />
+        )}
       </Animated.View>
     </View>
   );
@@ -328,6 +334,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   exNameDone: { color: colors.textDim },
+
+  gif: {
+    width: 84,
+    height: 84,
+    borderRadius: 12,
+    alignSelf: 'center',
+    marginRight: 12,
+    backgroundColor: colors.bg,
+  },
 
   steppers: { marginTop: 10, gap: 8 },
   stepper: { flexDirection: 'row', alignItems: 'center' },
