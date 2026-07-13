@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthActions } from '@convex-dev/auth/react';
@@ -26,15 +26,21 @@ export default function LandingScreen({ navigation }: Props) {
           style={styles.section}
           onPress={() => navigation.navigate('Runs')}
         >
-          <LinearGradient
-            colors={[colors.accent, colors.accent2]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.sectionFill}
+          <ImageBackground
+            source={require('../../assets/runs-bg.png')}
+            style={styles.sectionImage}
+            resizeMode="cover"
           >
-            <Text style={styles.sectionLabel}>TRACK & REVIEW</Text>
-            <Text style={styles.sectionTitle}>RUNS</Text>
-          </LinearGradient>
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.75)']}
+              start={{ x: 0, y: 0.35 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.sectionFill}
+            >
+              <Text style={styles.sectionLabel}>TRACK & REVIEW</Text>
+              <Text style={styles.sectionTitle}>RUNS</Text>
+            </LinearGradient>
+          </ImageBackground>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -42,15 +48,21 @@ export default function LandingScreen({ navigation }: Props) {
           style={styles.section}
           onPress={() => navigation.navigate('Workouts')}
         >
-          <LinearGradient
-            colors={['#00E0C7', '#1FB6FF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.sectionFill}
+          <ImageBackground
+            source={require('../../assets/workouts-bg.jpg')}
+            style={styles.sectionImage}
+            resizeMode="cover"
           >
-            <Text style={styles.sectionLabel}>STRENGTH & TRAINING</Text>
-            <Text style={styles.sectionTitle}>WORKOUTS</Text>
-          </LinearGradient>
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.75)']}
+              start={{ x: 0, y: 0.35 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.sectionFill}
+            >
+              <Text style={styles.sectionLabel}>STRENGTH & TRAINING</Text>
+              <Text style={styles.sectionTitle}>WORKOUTS</Text>
+            </LinearGradient>
+          </ImageBackground>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -92,6 +104,9 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 24,
     overflow: 'hidden',
+  },
+  sectionImage: {
+    flex: 1,
   },
   sectionFill: {
     flex: 1,
