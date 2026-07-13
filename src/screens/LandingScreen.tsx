@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { ImageBackground } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthActions } from '@convex-dev/auth/react';
@@ -29,7 +30,8 @@ export default function LandingScreen({ navigation }: Props) {
           <ImageBackground
             source={require('../../assets/runs-bg.png')}
             style={styles.sectionImage}
-            resizeMode="cover"
+            contentFit="cover"
+            contentPosition={{ top: -120, left: '50%' }}
           >
             <LinearGradient
               colors={['transparent', 'rgba(0,0,0,0.75)']}
@@ -51,7 +53,8 @@ export default function LandingScreen({ navigation }: Props) {
           <ImageBackground
             source={require('../../assets/workouts-bg.jpg')}
             style={styles.sectionImage}
-            resizeMode="cover"
+            contentFit="cover"
+            contentPosition={{ top: -110, left: '50%' }}
           >
             <LinearGradient
               colors={['transparent', 'rgba(0,0,0,0.75)']}
