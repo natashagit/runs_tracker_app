@@ -9,6 +9,8 @@ import {
   PanResponder,
   Dimensions,
   Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -65,18 +67,47 @@ function Stepper({
   );
 }
 
+// Fullscreen preview of an exercise GIF; tap anywhere to dismiss.
+function GifPreview({
+  name,
+  gif,
+  onClose,
+}: {
+  name: string;
+  gif: number;
+  onClose: () => void;
+}) {
+  return (
+    <Modal
+      visible
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
+      <Pressable style={styles.previewBackdrop} onPress={onClose}>
+        <Text style={styles.previewName}>{name.toUpperCase()}</Text>
+        <Image source={gif} style={styles.previewGif} contentFit="contain" />
+        <Text style={styles.previewHint}>TAP ANYWHERE TO CLOSE</Text>
+      </Pressable>
+    </Modal>
+  );
+}
+
 function ExerciseRow({
   name,
   completed,
   defaultSets,
   defaultReps,
   onComplete,
+  onPressGif,
 }: {
   name: string;
   completed: boolean;
   defaultSets: number;
   defaultReps: number;
   onComplete: (name: string, sets: number, reps: number) => void;
+  onPressGif: (name: string, gif: number) => void;
 }) {
   const [sets, setSets] = useState(defaultSets);
   const [reps, setReps] = useState(defaultReps);
@@ -163,7 +194,13 @@ function ExerciseRow({
           </View>
         </View>
         {gif != null && (
-          <Image source={gif} style={styles.gif} contentFit="cover" />
+          <TouchableOpacity
+            onPress={() => onPressGif(name, gif)}
+            activeOpacity={0.7}
+            style={styles.gifTouch}
+          >
+            <Image source={gif} style={styles.gif} contentFit="cover" />
+          </TouchableOpacity>
         )}
       </Animated.View>
     </View>
@@ -180,6 +217,9 @@ export default function WorkoutExercisesScreen({ navigation, route }: Props) {
 
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [sessionLogged, setSessionLogged] = useState(false);
+  const [preview, setPreview] = useState<{ name: string; gif: number } | null>(
+    null
+  );
   const logExercise = useMutation(api.exerciseLogs.add);
   const logWorkout = useMutation(api.workouts.logForDay);
 
@@ -253,9 +293,18 @@ export default function WorkoutExercisesScreen({ navigation, route }: Props) {
             defaultSets={defaults.sets}
             defaultReps={defaults.reps}
             onComplete={handleComplete}
+            onPressGif={(name, gif) => setPreview({ name, gif })}
           />
         ))}
       </ScrollView>
+
+      {preview != null && (
+        <GifPreview
+          name={preview.name}
+          gif={preview.gif}
+          onClose={() => setPreview(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -335,13 +384,44 @@ const styles = StyleSheet.create({
   },
   exNameDone: { color: colors.textDim },
 
+  gifTouch: {
+    alignSelf: 'center',
+    marginRight: 12,
+  },
   gif: {
     width: 84,
     height: 84,
     borderRadius: 12,
-    alignSelf: 'center',
-    marginRight: 12,
     backgroundColor: colors.bg,
+  },
+
+  previewBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  previewName: {
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: 28,
+    letterSpacing: 1,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  previewGif: {
+    width: SCREEN_W - 48,
+    height: SCREEN_W - 48,
+    borderRadius: 20,
+    backgroundColor: colors.text,
+  },
+  previewHint: {
+    color: colors.textDim,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginTop: 20,
   },
 
   steppers: { marginTop: 10, gap: 8 },
