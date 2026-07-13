@@ -31,7 +31,7 @@ export default function LandingScreen({ navigation }: Props) {
             source={require('../../assets/runs-bg.png')}
             style={styles.sectionImage}
             contentFit="cover"
-            contentPosition="top"
+            contentPosition={{ top: -120, left: '50%' }}
           >
             <LinearGradient
               colors={['transparent', 'rgba(0,0,0,0.75)']}
@@ -54,7 +54,7 @@ export default function LandingScreen({ navigation }: Props) {
             source={require('../../assets/workouts-bg.jpg')}
             style={styles.sectionImage}
             contentFit="cover"
-            contentPosition="top"
+            contentPosition={{ top: -110, left: '50%' }}
           >
             <LinearGradient
               colors={['transparent', 'rgba(0,0,0,0.75)']}
